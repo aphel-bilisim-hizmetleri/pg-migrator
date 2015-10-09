@@ -3,6 +3,25 @@ pg-migrator
 
 The complete and easy to use command-line migration tool for [PostgreSQL](http://www.postgresql.org/).
 
+Also can be called directly via function call if you runing gulp or grunt.
+
+````javascript
+    var migrate = require('pg-migrator/migrate');
+
+    migrate({
+            connectionString: connectionString,
+            targetVersion: 5, // optional
+            path: './migrations' // migration scripts directory
+        })
+        .then(function () {
+            // migration completed
+        })
+        .catch(function (err) {
+            // migration failed
+        });
+
+````
+
 [![Build Status](https://travis-ci.org/Aphel-Cloud-Solutions/pg-migrator.png?branch=master)](https://travis-ci.org/Aphel-Cloud-Solutions/pg-migrator) [![Code Climate](https://codeclimate.com/github/Aphel-Cloud-Solutions/pg-migrator.png)](https://codeclimate.com/github/Aphel-Cloud-Solutions/pg-migrator)
 
 ## Features
