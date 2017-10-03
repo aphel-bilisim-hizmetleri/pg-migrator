@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+
+'use strict'
+
+const rollback = require('../lib/rollback')
+const config = require('./env').getConfig()
+
+rollback({
+  connectionString: config.connectionString,
+  path: config.scriptsPath,
+  tableName: config.tableName,
+  targetVersion: config.targetVersion || '-1',
+  printStatus: true,
+  dbDriver: config.dbDriver
+})
+  .then(function () {
+    process.exit(0)
+  })
+  .catch(function () {
+    process.exit(1)
+  })

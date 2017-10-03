@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+
+const create = require('../lib/create')
+
+const titleParts = Array.prototype.slice.call(process.argv, 2)
+
+let scriptsPath = process.env.npm_package_config_db_migrator_directory ||
+  process.env.npm_config_db_migrator_directory ||
+  process.env.DB_MIGRATOR_DIR ||
+  './migrations'
+
+create({
+  path: scriptsPath,
+  title: titleParts.join(' ')
+})

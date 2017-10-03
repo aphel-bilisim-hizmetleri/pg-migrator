@@ -1,0 +1,19 @@
+#!/usr/bin/env node
+
+const migrate = require('../lib/migrate')
+const config = require('./env').getConfig()
+
+migrate({
+  connectionString: config.connectionString,
+  path: config.scriptsPath,
+  tableName: config.tableName,
+  targetVersion: config.targetVersion || 0,
+  printStatus: true,
+  dbDriver: config.dbDriver
+})
+  .then(function () {
+    process.exit(0)
+  })
+  .catch(function () {
+    process.exit(1)
+  })
