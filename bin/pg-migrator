@@ -5,20 +5,19 @@
 var fs = require("fs");
 var path = require("path");
 var colors = require("colors");
-var Pgb = require("pg-bluebird");
+let pg = require("pg");
 
-GLOBAL._ = require("underscore");
-GLOBAL.promise = require("bluebird");
+global._ = require("underscore");
 
 var ValidationService = require("../lib/application/service/validation-service");
 var messages = require("../lib/infrastructure/messages");
-var persisterProvider = new Pgb();
+var Persister = require("../lib/infrastructure/persister");
 
 colors.setTheme({
-    verbose: 'cyan',
-    info: 'green',
-    warn: 'yellow',
-    error: 'red'
+    verbose: "cyan",
+    info: "green",
+    warn: "yellow",
+    error: "red"
 });
 
 // First argument : connectionString (mandatory)
@@ -29,6 +28,7 @@ var args = process.argv.slice(2);
 var isValid = new ValidationService(messages).validate(args);
 
 if (!isValid) {
+
     process.exit(1);
 }
 
@@ -42,32 +42,30 @@ if (args.length > 1) {
     targetVersion = args[1];
 }
 
-var connection, currentPersister, currentVersion;
+var currentVersion;
+
+var persister = new Persister(pg, connectionString);
 
 // Connecting to PostgreSQL
-persisterProvider.connect(connectionString)
-    .then(function (persister) {
+persister.connect()
+    .then(function () {
 
-        connection = persister;
-        currentPersister = persister.client;
-
-        // Starting transaction
-        return currentPersister.query("BEGIN TRANSACTION");
+        return persister.query("BEGIN TRANSACTION");
     })
     .then(function () {
 
-        return getMigrationService(currentPersister).migrate(".", targetVersion);
+        return getMigrationService(persister).migrate(".", targetVersion);
     })
     .then(function (curVer) {
 
         currentVersion = curVer;
 
         // Migration has been completed successfully, committing the transaction
-        return currentPersister.query("COMMIT");
+        return persister.query("COMMIT");
     })
     .then(function () {
 
-        connection.done();
+        persister.closeConnection();
 
         console.log("--------------------------------------------------".grey);
         console.log((messages.MIGRATION_COMPLETED + currentVersion).info);
@@ -79,12 +77,11 @@ persisterProvider.connect(connectionString)
         // Migration failed
 
         if (error) {
+
             console.error((messages.MIGRATION_ERROR + error).error);
         }
 
-        if (connection) {
-            connection.done();
-        }
+        persister.closeConnection();
 
         process.exit(1);
     });
